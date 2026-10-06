@@ -61,23 +61,23 @@
 - [x] Write Memory tests
 
 ## Phase 9: Knowledge & RAG Subsystem
-- [ ] Build Document parser & chunking engine
-- [ ] Build Embedding & RAG retrieval pipeline
-- [ ] Write Knowledge base tests
+- [x] Build Document parser & chunking engine
+- [x] Build Embedding & RAG retrieval pipeline
+- [x] Write Knowledge base tests
 
 ## Phase 10: Workflow Engine
-- [ ] Build Visual DAG Workflow engine & Node executor
-- [ ] Support Trigger, Agent, Condition, Loop, Parallel, Human Approval nodes
-- [ ] Write Workflow execution tests
+- [x] Build Visual DAG Workflow engine & Node executor
+- [x] Support Trigger, Agent, Condition, Loop, Parallel, Human Approval nodes
+- [x] Write Workflow execution tests
 
 ## Phase 11: Multi-Agent Team Systems
-- [ ] Implement Sequential, Parallel, Hierarchical, Debate & Handoff orchestration
-- [ ] Write Multi-agent team tests
+- [x] Implement Sequential, Parallel, Hierarchical, Debate & Handoff orchestration
+- [x] Write Multi-agent team tests
 
 ## Phase 12: Security & Permissions
-- [ ] Build RBAC, policy engine, secret encryption (AES-256)
-- [ ] Implement Execution Sandbox & prompt injection defense
-- [ ] Write Security tests
+- [x] Build RBAC, policy engine, secret encryption (AES-256)
+- [x] Implement Execution Sandbox & prompt injection defense
+- [x] Write Security tests
 
 ## Phase 13: Web UI & AI Command Center
 - [x] Build Dashboard & AI Command Center UI
