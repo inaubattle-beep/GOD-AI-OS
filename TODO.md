@@ -84,3 +84,15 @@
 - [x] Build Agent IDE & Visual Agent Builder
 - [x] Build Workflow Canvas & Run Monitor
 - [x] Build MCP, Tools, Skills & Memory Management UI
+
+## Phase 14: Business Integrations
+- [x] Implement ERPNext, ViciDial/Asterisk, n8n, GitHub adapters
+
+## Phase 15: Evaluation & Self-Improvement
+- [x] Implement Evaluator Agent & continuous learning proposals
+
+## Phase 16: Observability & Tracing
+- [x] Build execution traces, token & cost tracking metrics dashboard
+
+## Phase 17: Production Packaging
+- [x] Finalize Docker Compose, Dockerfiles, GitHub Actions CI/CD pipeline
