@@ -3,16 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Bot, Cpu, Terminal, Shield, Wrench, Network, Activity, 
-  Layers, PlusCircle, CheckCircle2, AlertCircle, Play, Settings, RefreshCw, Zap, Sliders, Package, BookOpen
+  Layers, PlusCircle, CheckCircle2, AlertCircle, Play, Settings, RefreshCw, Zap, Sliders, Package, BookOpen, MessageSquare, Send
 } from 'lucide-react';
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<'command' | 'agents' | 'templates' | 'tools' | 'mcp' | 'models' | 'plugins' | 'skills'>('command');
+  const [activeTab, setActiveTab] = useState<'command' | 'agents' | 'templates' | 'tools' | 'mcp' | 'models' | 'plugins' | 'skills' | 'communications'>('command');
   const [promptInput, setPromptInput] = useState('');
   const [chatLogs, setChatLogs] = useState<Array<{ sender: string; text: string; trace?: any }>>([
     {
       sender: 'MOTHER AGENT',
-      text: 'Greetings. I am GOD AI OS Mother Agent. Ready to orchestrate specialized worker agents, tools, MCP servers, plugins, skills, and multi-step workflows. Enter a command or ask me to create an agent.'
+      text: 'Greetings. I am GOD AI OS Mother Agent. Ready to orchestrate specialized worker agents, tools, MCP servers, plugins, communications channels, and multi-step workflows. Enter a command or ask me to create an agent.'
     }
   ]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -24,7 +24,14 @@ export default function DashboardPage() {
   const [modelProviders, setModelProviders] = useState<any[]>([]);
   const [plugins, setPlugins] = useState<any[]>([]);
   const [skills, setSkills] = useState<any[]>([]);
+  const [commChannels, setCommChannels] = useState<any[]>([]);
+  const [commLogs, setCommLogs] = useState<any[]>([]);
   const [systemHealth, setSystemHealth] = useState<any>(null);
+
+  // Communications Dispatch Form State
+  const [dispatchChannel, setDispatchChannel] = useState('telegram-bot');
+  const [dispatchRecipient, setDispatchRecipient] = useState('@ops_team');
+  const [dispatchMessage, setDispatchMessage] = useState('System alert: All agent runtimes online');
 
   // Router test states
   const [routerPrompt, setRouterPrompt] = useState('Write an efficient sorting algorithm');
@@ -38,7 +45,7 @@ export default function DashboardPage() {
 
   const fetchData = async () => {
     try {
-      const [tRes, aRes, toolRes, mcpRes, modelsRes, provRes, plugRes, skillRes, healthRes] = await Promise.all([
+      const [tRes, aRes, toolRes, mcpRes, modelsRes, provRes, plugRes, skillRes, commChanRes, commLogRes, healthRes] = await Promise.all([
         fetch('http://localhost:8000/api/v1/agents/templates').then(r => r.json()).catch(() => []),
         fetch('http://localhost:8000/api/v1/agents').then(r => r.json()).catch(() => []),
         fetch('http://localhost:8000/api/v1/tools').then(r => r.json()).catch(() => []),
@@ -47,6 +54,8 @@ export default function DashboardPage() {
         fetch('http://localhost:8000/api/v1/models/providers').then(r => r.json()).catch(() => []),
         fetch('http://localhost:8000/api/v1/plugins').then(r => r.json()).catch(() => []),
         fetch('http://localhost:8000/api/v1/skills').then(r => r.json()).catch(() => []),
+        fetch('http://localhost:8000/api/v1/communications/channels').then(r => r.json()).catch(() => []),
+        fetch('http://localhost:8000/api/v1/communications/logs').then(r => r.json()).catch(() => []),
         fetch('http://localhost:8000/health').then(r => r.json()).catch(() => null)
       ]);
       setTemplates(tRes || []);
@@ -57,6 +66,8 @@ export default function DashboardPage() {
       setModelProviders(provRes || []);
       setPlugins(plugRes || []);
       setSkills(skillRes || []);
+      setCommChannels(commChanRes || []);
+      setCommLogs(commLogRes || []);
       setSystemHealth(healthRes);
     } catch (e) {
       console.error('Error connecting to backend API', e);
@@ -103,6 +114,27 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDispatchCommunication = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('http://localhost:8000/api/v1/communications/dispatch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channel_id: dispatchChannel,
+          recipient: dispatchRecipient,
+          message_text: dispatchMessage
+        })
+      });
+      if (res.ok) {
+        alert('Message successfully dispatched across channel!');
+        fetchData();
+      }
+    } catch (err) {
+      alert('Failed to dispatch communication message.');
+    }
+  };
+
   const handleTestRouter = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -122,7 +154,7 @@ export default function DashboardPage() {
     }
   };
 
-  const togglePlugin = async (plugin_id: str, current_state: boolean) => {
+  const togglePlugin = async (plugin_id: string, current_state: boolean) => {
     try {
       const res = await fetch(`http://localhost:8000/api/v1/plugins/${plugin_id}/toggle`, {
         method: 'POST',
@@ -175,6 +207,15 @@ export default function DashboardPage() {
             >
               <Terminal className="w-4 h-4" />
               AI Command Center
+            </button>
+            <button
+              onClick={() => setActiveTab('communications')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'communications' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 glow-primary' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+              }`}
+            >
+              <MessageSquare className="w-4 h-4" />
+              Communications Hub ({commChannels.length})
             </button>
             <button
               onClick={() => setActiveTab('models')}
@@ -251,8 +292,8 @@ export default function DashboardPage() {
             <span className="text-emerald-400 font-semibold">ONLINE</span>
           </div>
           <div className="text-[11px] text-slate-500 space-y-0.5">
+            <p>Channels: Omnichannel ({commChannels.length})</p>
             <p>Plugins: Active ({plugins.length})</p>
-            <p>MCP Servers: Connected ({mcpServers.length})</p>
           </div>
         </div>
       </aside>
@@ -263,6 +304,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-4">
             <h2 className="text-lg font-semibold text-slate-100 capitalize">
               {activeTab === 'command' && 'AI Command Center & Mother Agent'}
+              {activeTab === 'communications' && 'Omnichannel Communications Hub (Email, Telegram, WhatsApp, Slack, ViciDial)'}
               {activeTab === 'models' && 'Multi-Model Gateway & Intelligent Router'}
               {activeTab === 'plugins' && 'Plugin Ecosystem & Manager'}
               {activeTab === 'skills' && 'Reusable Skills Library'}
@@ -341,6 +383,119 @@ export default function DashboardPage() {
                   <Play className="w-4 h-4" /> Send Command
                 </button>
               </form>
+            </div>
+          )}
+
+          {activeTab === 'communications' && (
+            <div className="max-w-6xl mx-auto space-y-6">
+              {/* Active Channels Grid */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Active Omnichannel Gateway Interfaces</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {commChannels.map((c, i) => (
+                    <div key={i} className="glass-card p-4 rounded-xl">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-bold text-white text-sm">{c.name}</h4>
+                        <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
+                          {c.status}
+                        </span>
+                      </div>
+                      <p className="text-xs text-indigo-400 font-mono">Channel ID: {c.channel_id}</p>
+                      <p className="text-[11px] text-slate-400 capitalize mt-1">Type: {c.channel_type}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Message Dispatcher Form */}
+              <div className="glass-panel p-6 rounded-2xl border border-slate-800">
+                <h3 className="font-bold text-lg text-white mb-4 flex items-center gap-2">
+                  <Send className="w-5 h-5 text-indigo-400" /> Dispatch Communication Message / Alert
+                </h3>
+
+                <form onSubmit={handleDispatchCommunication} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs text-slate-400 mb-1 block">Target Communication Channel</label>
+                      <select 
+                        value={dispatchChannel}
+                        onChange={(e) => setDispatchChannel(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none"
+                      >
+                        {commChannels.map((c, idx) => (
+                          <option key={idx} value={c.channel_id}>{c.name} ({c.channel_type})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-slate-400 mb-1 block">Recipient (Email / Phone / Telegram Handle / Slack Channel)</label>
+                      <input 
+                        type="text"
+                        value={dispatchRecipient}
+                        onChange={(e) => setDispatchRecipient(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-slate-400 mb-1 block">Message Content / Text Prompt</label>
+                    <textarea 
+                      rows={3}
+                      value={dispatchMessage}
+                      onChange={(e) => setDispatchMessage(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-100 focus:outline-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold rounded-xl text-white transition-all shadow glow-primary flex items-center gap-1.5"
+                  >
+                    <Send className="w-3.5 h-3.5" /> Dispatch Communication
+                  </button>
+                </form>
+              </div>
+
+              {/* Message Dispatch Logs */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Recent Communication Dispatch Logs</h3>
+                <div className="glass-panel rounded-xl overflow-hidden border border-slate-800">
+                  <table className="w-full text-left text-xs text-slate-300">
+                    <thead className="bg-slate-900/80 text-slate-400 uppercase font-mono text-[10px]">
+                      <tr>
+                        <th className="p-3">Dispatch ID</th>
+                        <th className="p-3">Channel</th>
+                        <th className="p-3">Recipient</th>
+                        <th className="p-3">Message Snippet</th>
+                        <th className="p-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {commLogs.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="p-4 text-center text-slate-500 font-mono">No communication dispatches recorded yet. Use form above to test.</td>
+                        </tr>
+                      ) : (
+                        commLogs.map((log, i) => (
+                          <tr key={i} className="hover:bg-slate-800/40">
+                            <td className="p-3 font-mono text-indigo-400">{log.dispatch_id}</td>
+                            <td className="p-3 uppercase text-[11px] font-semibold">{log.channel_type}</td>
+                            <td className="p-3 font-mono">{log.recipient}</td>
+                            <td className="p-3">{log.message_snippet}</td>
+                            <td className="p-3">
+                              <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
+                                {log.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
 
