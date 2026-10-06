@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Bot, Cpu, Terminal, Shield, Wrench, Network, Activity, 
-  Layers, PlusCircle, CheckCircle2, AlertCircle, Play, Settings, RefreshCw, Zap
+  Layers, PlusCircle, CheckCircle2, AlertCircle, Play, Settings, RefreshCw, Zap, Sliders
 } from 'lucide-react';
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<'command' | 'agents' | 'templates' | 'tools' | 'mcp'>('command');
+  const [activeTab, setActiveTab] = useState<'command' | 'agents' | 'templates' | 'tools' | 'mcp' | 'models'>('command');
   const [promptInput, setPromptInput] = useState('');
   const [chatLogs, setChatLogs] = useState<Array<{ sender: string; text: string; trace?: any }>>([
     {
@@ -20,26 +20,37 @@ export default function DashboardPage() {
   const [activeAgents, setActiveAgents] = useState<any[]>([]);
   const [tools, setTools] = useState<any[]>([]);
   const [mcpServers, setMcpServers] = useState<any[]>([]);
+  const [availableModels, setAvailableModels] = useState<any[]>([]);
+  const [modelProviders, setModelProviders] = useState<any[]>([]);
   const [systemHealth, setSystemHealth] = useState<any>(null);
 
-  // Fetch initial telemetry
+  // Router test states
+  const [routerPrompt, setRouterPrompt] = useState('Write an efficient sorting algorithm');
+  const [routerTaskType, setRouterTaskType] = useState('coding');
+  const [routerPrivacy, setRouterPrivacy] = useState(false);
+  const [routerResult, setRouterResult] = useState<any>(null);
+
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
     try {
-      const [tRes, aRes, toolRes, mcpRes, healthRes] = await Promise.all([
+      const [tRes, aRes, toolRes, mcpRes, modelsRes, provRes, healthRes] = await Promise.all([
         fetch('http://localhost:8000/api/v1/agents/templates').then(r => r.json()).catch(() => []),
         fetch('http://localhost:8000/api/v1/agents').then(r => r.json()).catch(() => []),
         fetch('http://localhost:8000/api/v1/tools').then(r => r.json()).catch(() => []),
         fetch('http://localhost:8000/api/v1/mcp/servers').then(r => r.json()).catch(() => []),
+        fetch('http://localhost:8000/api/v1/models').then(r => r.json()).catch(() => []),
+        fetch('http://localhost:8000/api/v1/models/providers').then(r => r.json()).catch(() => []),
         fetch('http://localhost:8000/health').then(r => r.json()).catch(() => null)
       ]);
       setTemplates(tRes || []);
       setActiveAgents(aRes || []);
       setTools(toolRes || []);
       setMcpServers(mcpRes || []);
+      setAvailableModels(modelsRes || []);
+      setModelProviders(provRes || []);
       setSystemHealth(healthRes);
     } catch (e) {
       console.error('Error connecting to backend API', e);
@@ -86,6 +97,25 @@ export default function DashboardPage() {
     }
   };
 
+  const handleTestRouter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('http://localhost:8000/api/v1/models/route', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: routerPrompt,
+          task_type: routerTaskType,
+          require_privacy: routerPrivacy
+        })
+      });
+      const data = await res.json();
+      setRouterResult(data);
+    } catch (err) {
+      alert('Failed to execute Model Gateway router');
+    }
+  };
+
   const instantiateTemplate = async (name: string) => {
     try {
       const res = await fetch(`http://localhost:8000/api/v1/agents/templates/${encodeURIComponent(name)}/instantiate`, {
@@ -124,6 +154,15 @@ export default function DashboardPage() {
             >
               <Terminal className="w-4 h-4" />
               AI Command Center
+            </button>
+            <button
+              onClick={() => setActiveTab('models')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'models' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 glow-primary' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+              }`}
+            >
+              <Sliders className="w-4 h-4" />
+              Model Gateway ({availableModels.length})
             </button>
             <button
               onClick={() => setActiveTab('agents')}
@@ -173,8 +212,8 @@ export default function DashboardPage() {
             <span className="text-emerald-400 font-semibold">ONLINE</span>
           </div>
           <div className="text-[11px] text-slate-500 space-y-0.5">
-            <p>Provider: Multi-LLM Active</p>
-            <p>Database: SQLite Async / PG</p>
+            <p>Providers: OpenAI, Gemini, Ollama</p>
+            <p>Model Gateway: Active</p>
           </div>
         </div>
       </aside>
@@ -186,6 +225,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-4">
             <h2 className="text-lg font-semibold text-slate-100 capitalize">
               {activeTab === 'command' && 'AI Command Center & Mother Agent'}
+              {activeTab === 'models' && 'Multi-Model Gateway & Intelligent Router'}
               {activeTab === 'agents' && 'Active Agent Directory'}
               {activeTab === 'templates' && 'Built-in Agent Templates (25+)'}
               {activeTab === 'tools' && 'Universal Tool Registry'}
@@ -207,7 +247,6 @@ export default function DashboardPage() {
         <div className="flex-1 p-6 overflow-y-auto">
           {activeTab === 'command' && (
             <div className="max-w-5xl mx-auto flex flex-col h-full space-y-4">
-              {/* Chat Output Area */}
               <div className="flex-1 glass-panel rounded-2xl p-4 overflow-y-auto space-y-4 border border-slate-800">
                 {chatLogs.map((log, index) => (
                   <div 
@@ -246,13 +285,12 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              {/* Chat Input Form */}
               <form onSubmit={handleMotherSubmit} className="flex gap-3">
                 <input
                   type="text"
                   value={promptInput}
                   onChange={(e) => setPromptInput(e.target.value)}
-                  placeholder="Ask Mother Agent to execute a task or create an agent (e.g. 'Create a DevOps agent that monitors server health')..."
+                  placeholder="Ask Mother Agent to execute a task or create an agent..."
                   className="flex-1 bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-100"
                 />
                 <button
@@ -263,6 +301,132 @@ export default function DashboardPage() {
                   <Play className="w-4 h-4" /> Send Command
                 </button>
               </form>
+            </div>
+          )}
+
+          {activeTab === 'models' && (
+            <div className="max-w-6xl mx-auto space-y-6">
+              {/* Providers Summary */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Active LLM Providers</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {modelProviders.map((p, i) => (
+                    <div key={i} className="glass-card p-4 rounded-xl flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold text-white text-sm">{p.name}</h4>
+                        <span className="text-[10px] text-slate-400 uppercase">{p.type} Provider</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
+                        {p.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Models Directory */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Registered Models & Capabilities</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {availableModels.map((m, i) => (
+                    <div key={i} className="glass-card p-5 rounded-2xl">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-bold text-white text-base">{m.name}</h4>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          m.is_local ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                        }`}>
+                          {m.is_local ? 'LOCAL' : 'CLOUD'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-indigo-400 font-mono mb-3">Model ID: {m.model_id}</p>
+                      
+                      <div className="space-y-1.5 text-xs text-slate-300">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Context Window:</span>
+                          <span className="font-mono">{m.context_window.toLocaleString()} tokens</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Coding Score:</span>
+                          <span className="font-mono text-emerald-400">{(m.coding_score * 100).toFixed(0)}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Reasoning Score:</span>
+                          <span className="font-mono text-indigo-400">{(m.reasoning_score * 100).toFixed(0)}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Cost / 1k tokens:</span>
+                          <span className="font-mono text-cyan-300">${m.cost_per_1k_input}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Interactive Router Test */}
+              <div className="glass-panel p-6 rounded-2xl border border-slate-800">
+                <h3 className="font-bold text-lg text-white mb-4 flex items-center gap-2">
+                  <Sliders className="w-5 h-5 text-indigo-400" /> Test Intelligent Model Router
+                </h3>
+
+                <form onSubmit={handleTestRouter} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-xs text-slate-400 mb-1 block">Task Intent</label>
+                      <select 
+                        value={routerTaskType}
+                        onChange={(e) => setRouterTaskType(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none"
+                      >
+                        <option value="coding">Coding & Software Engineering</option>
+                        <option value="reasoning">Complex Logical Reasoning</option>
+                        <option value="fast">Fast / Cheap Execution</option>
+                        <option value="general">General Purpose</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center pt-5">
+                      <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                        <input 
+                          type="checkbox"
+                          checked={routerPrivacy}
+                          onChange={(e) => setRouterPrivacy(e.target.checked)}
+                          className="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0"
+                        />
+                        Strict Local Privacy (Route to Ollama)
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-slate-400 mb-1 block">Test Prompt</label>
+                    <input 
+                      type="text"
+                      value={routerPrompt}
+                      onChange={(e) => setRouterPrompt(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-100 focus:outline-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold rounded-xl text-white transition-all shadow glow-primary"
+                  >
+                    Route Prompt & Execute
+                  </button>
+                </form>
+
+                {routerResult && (
+                  <div className="mt-4 p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
+                    <p className="text-indigo-400 font-bold">🎯 Routed Target Model: {routerResult.routed_model} ({routerResult.provider})</p>
+                    <p className="text-slate-300">Is Local Execution: {routerResult.is_local ? 'YES' : 'NO'}</p>
+                    <p className="text-slate-300">Estimated Cost: ${routerResult.estimated_cost_usd}</p>
+                    <div className="pt-2 border-t border-slate-800 text-slate-200">
+                      Response: {routerResult.content}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
