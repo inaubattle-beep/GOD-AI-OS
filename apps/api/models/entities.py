@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Integer, Float, Boolean, Text, JSON, DateTime, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 import enum
 
@@ -8,6 +8,9 @@ from apps.api.database import Base
 
 def generate_uuid():
     return str(uuid.uuid4())
+
+def utc_now():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 class AgentLifecycle(str, enum.Enum):
     DRAFT = "DRAFT"
@@ -36,7 +39,7 @@ class User(Base):
     full_name = Column(String, nullable=False)
     role = Column(String, default="admin")
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 class Organization(Base):
     __tablename__ = "organizations"
@@ -44,7 +47,7 @@ class Organization(Base):
     id = Column(String, primary_key=True, default=generate_uuid)
     name = Column(String, nullable=False)
     slug = Column(String, unique=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 class Workspace(Base):
     __tablename__ = "workspaces"
@@ -52,7 +55,7 @@ class Workspace(Base):
     id = Column(String, primary_key=True, default=generate_uuid)
     name = Column(String, nullable=False)
     org_id = Column(String, ForeignKey("organizations.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 class ModelProvider(Base):
     __tablename__ = "providers"
@@ -62,7 +65,7 @@ class ModelProvider(Base):
     provider_type = Column(String, nullable=False) # openai, gemini, anthropic, ollama
     base_url = Column(String, nullable=True)
     is_enabled = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 class AIModel(Base):
     __tablename__ = "models"
@@ -76,7 +79,7 @@ class AIModel(Base):
     supports_vision = Column(Boolean, default=False)
     cost_per_1k_input = Column(Float, default=0.0)
     cost_per_1k_output = Column(Float, default=0.0)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 class Agent(Base):
     __tablename__ = "agents"
@@ -107,8 +110,8 @@ class Agent(Base):
     budget_usd = Column(Float, default=10.0)
     time_limit_sec = Column(Integer, default=300)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 
 class AgentRun(Base):
     __tablename__ = "agent_runs"
@@ -126,7 +129,7 @@ class AgentRun(Base):
     duration_sec = Column(Float, default=0.0)
     
     trace_data = Column(JSON, default=dict)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
     completed_at = Column(DateTime, nullable=True)
 
 class Task(Base):
@@ -142,7 +145,7 @@ class Task(Base):
     result = Column(JSON, default=dict)
     
     parent_task_id = Column(String, ForeignKey("tasks.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
     completed_at = Column(DateTime, nullable=True)
 
 class ToolEntity(Base):
@@ -158,7 +161,7 @@ class ToolEntity(Base):
     output_schema = Column(JSON, default=dict)
     enabled = Column(Boolean, default=True)
     provider = Column(String, default="builtin")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 class MCPServerEntity(Base):
     __tablename__ = "mcp_servers"
@@ -174,7 +177,7 @@ class MCPServerEntity(Base):
     enabled = Column(Boolean, default=True)
     status = Column(String, default="DISCONNECTED") # CONNECTED, DISCONNECTED, ERROR
     tools_discovered = Column(JSON, default=list)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 class SkillEntity(Base):
     __tablename__ = "skills"
@@ -187,7 +190,7 @@ class SkillEntity(Base):
     required_tools = Column(JSON, default=list)
     version = Column(String, default="1.0.0")
     enabled = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 class PluginEntity(Base):
     __tablename__ = "plugins"
@@ -198,7 +201,7 @@ class PluginEntity(Base):
     description = Column(Text, nullable=True)
     enabled = Column(Boolean, default=True)
     manifest = Column(JSON, default=dict)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 class WorkflowEntity(Base):
     __tablename__ = "workflows"
@@ -208,7 +211,7 @@ class WorkflowEntity(Base):
     description = Column(Text, nullable=True)
     definition = Column(JSON, default=dict) # DAG definition (nodes & edges)
     enabled = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 class MemoryItem(Base):
     __tablename__ = "memory_items"
@@ -221,7 +224,7 @@ class MemoryItem(Base):
     confidence = Column(Float, default=1.0)
     scope = Column(String, default="global")
     metadata_json = Column(JSON, default=dict)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 class KnowledgeSource(Base):
     __tablename__ = "knowledge_sources"
@@ -231,7 +234,7 @@ class KnowledgeSource(Base):
     source_type = Column(String, nullable=False) # pdf, docx, txt, url, git
     location = Column(Text, nullable=False)
     chunk_count = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 class ApprovalRequest(Base):
     __tablename__ = "approvals"
@@ -242,7 +245,7 @@ class ApprovalRequest(Base):
     description = Column(Text, nullable=False)
     payload = Column(JSON, default=dict)
     status = Column(String, default="PENDING") # PENDING, APPROVED, REJECTED
-    requested_at = Column(DateTime, default=datetime.utcnow)
+    requested_at = Column(DateTime, default=utc_now)
     resolved_at = Column(DateTime, nullable=True)
 
 class EvaluationRecord(Base):
@@ -254,7 +257,7 @@ class EvaluationRecord(Base):
     passed = Column(Boolean, default=True)
     feedback = Column(Text, nullable=True)
     criteria_json = Column(JSON, default=dict)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"
@@ -264,4 +267,4 @@ class AuditLog(Base):
     actor = Column(String, default="system")
     target_id = Column(String, nullable=True)
     details = Column(JSON, default=dict)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
