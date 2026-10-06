@@ -43,6 +43,8 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
+  const safeArray = (val: any) => (Array.isArray(val) ? val : []);
+
   const fetchData = async () => {
     try {
       const [tRes, aRes, toolRes, mcpRes, modelsRes, provRes, plugRes, skillRes, commChanRes, commLogRes, healthRes] = await Promise.all([
@@ -58,16 +60,16 @@ export default function DashboardPage() {
         fetch('http://localhost:8000/api/v1/communications/logs').then(r => r.json()).catch(() => []),
         fetch('http://localhost:8000/health').then(r => r.json()).catch(() => null)
       ]);
-      setTemplates(tRes || []);
-      setActiveAgents(aRes || []);
-      setTools(toolRes || []);
-      setMcpServers(mcpRes || []);
-      setAvailableModels(modelsRes || []);
-      setModelProviders(provRes || []);
-      setPlugins(plugRes || []);
-      setSkills(skillRes || []);
-      setCommChannels(commChanRes || []);
-      setCommLogs(commLogRes || []);
+      setTemplates(safeArray(tRes));
+      setActiveAgents(safeArray(aRes));
+      setTools(safeArray(toolRes));
+      setMcpServers(safeArray(mcpRes));
+      setAvailableModels(safeArray(modelsRes));
+      setModelProviders(safeArray(provRes));
+      setPlugins(safeArray(plugRes));
+      setSkills(safeArray(skillRes));
+      setCommChannels(safeArray(commChanRes));
+      setCommLogs(safeArray(commLogRes));
       setSystemHealth(healthRes);
     } catch (e) {
       console.error('Error connecting to backend API', e);
@@ -215,7 +217,7 @@ export default function DashboardPage() {
               }`}
             >
               <MessageSquare className="w-4 h-4" />
-              Communications Hub ({commChannels.length})
+              Communications Hub ({safeArray(commChannels).length})
             </button>
             <button
               onClick={() => setActiveTab('models')}
@@ -224,7 +226,7 @@ export default function DashboardPage() {
               }`}
             >
               <Sliders className="w-4 h-4" />
-              Model Gateway ({availableModels.length})
+              Model Gateway ({safeArray(availableModels).length})
             </button>
             <button
               onClick={() => setActiveTab('plugins')}
@@ -233,7 +235,7 @@ export default function DashboardPage() {
               }`}
             >
               <Package className="w-4 h-4" />
-              Plugins ({plugins.length})
+              Plugins ({safeArray(plugins).length})
             </button>
             <button
               onClick={() => setActiveTab('skills')}
@@ -242,7 +244,7 @@ export default function DashboardPage() {
               }`}
             >
               <BookOpen className="w-4 h-4" />
-              Skills Library ({skills.length})
+              Skills Library ({safeArray(skills).length})
             </button>
             <button
               onClick={() => setActiveTab('agents')}
@@ -251,7 +253,7 @@ export default function DashboardPage() {
               }`}
             >
               <Bot className="w-4 h-4" />
-              Active Agents ({activeAgents.length})
+              Active Agents ({safeArray(activeAgents).length})
             </button>
             <button
               onClick={() => setActiveTab('templates')}
@@ -260,7 +262,7 @@ export default function DashboardPage() {
               }`}
             >
               <Layers className="w-4 h-4" />
-              Agent Templates ({templates.length})
+              Agent Templates ({safeArray(templates).length})
             </button>
             <button
               onClick={() => setActiveTab('tools')}
@@ -269,7 +271,7 @@ export default function DashboardPage() {
               }`}
             >
               <Wrench className="w-4 h-4" />
-              Universal Tools ({tools.length})
+              Universal Tools ({safeArray(tools).length})
             </button>
             <button
               onClick={() => setActiveTab('mcp')}
@@ -278,7 +280,7 @@ export default function DashboardPage() {
               }`}
             >
               <Network className="w-4 h-4" />
-              MCP Servers ({mcpServers.length})
+              MCP Servers ({safeArray(mcpServers).length})
             </button>
           </nav>
         </div>
@@ -292,8 +294,8 @@ export default function DashboardPage() {
             <span className="text-emerald-400 font-semibold">ONLINE</span>
           </div>
           <div className="text-[11px] text-slate-500 space-y-0.5">
-            <p>Channels: Omnichannel ({commChannels.length})</p>
-            <p>Plugins: Active ({plugins.length})</p>
+            <p>Channels: Omnichannel ({safeArray(commChannels).length})</p>
+            <p>Plugins: Active ({safeArray(plugins).length})</p>
           </div>
         </div>
       </aside>
@@ -330,7 +332,7 @@ export default function DashboardPage() {
           {activeTab === 'command' && (
             <div className="max-w-5xl mx-auto flex flex-col h-full space-y-4">
               <div className="flex-1 glass-panel rounded-2xl p-4 overflow-y-auto space-y-4 border border-slate-800">
-                {chatLogs.map((log, index) => (
+                {safeArray(chatLogs).map((log, index) => (
                   <div 
                     key={index}
                     className={`flex flex-col ${log.sender === 'USER' ? 'items-end' : 'items-start'}`}
@@ -348,7 +350,7 @@ export default function DashboardPage() {
                         <div className="mt-3 pt-3 border-t border-slate-700/60 text-xs font-mono text-slate-400 space-y-1">
                           <p>⏱️ Duration: {log.trace.duration_sec}s | Tokens: {log.trace.tokens_used}</p>
                           <details className="cursor-pointer mt-1">
-                            <summary className="text-indigo-400 hover:underline">View Execution Trace Steps ({log.trace.steps?.length})</summary>
+                            <summary className="text-indigo-400 hover:underline">View Execution Trace Steps ({safeArray(log.trace.steps).length})</summary>
                             <pre className="mt-2 p-2 bg-slate-900 rounded text-[11px] overflow-x-auto text-slate-300">
                               {JSON.stringify(log.trace.steps, null, 2)}
                             </pre>
@@ -388,11 +390,10 @@ export default function DashboardPage() {
 
           {activeTab === 'communications' && (
             <div className="max-w-6xl mx-auto space-y-6">
-              {/* Active Channels Grid */}
               <div>
                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Active Omnichannel Gateway Interfaces</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {commChannels.map((c, i) => (
+                  {safeArray(commChannels).map((c, i) => (
                     <div key={i} className="glass-card p-4 rounded-xl">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-bold text-white text-sm">{c.name}</h4>
@@ -407,7 +408,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Message Dispatcher Form */}
               <div className="glass-panel p-6 rounded-2xl border border-slate-800">
                 <h3 className="font-bold text-lg text-white mb-4 flex items-center gap-2">
                   <Send className="w-5 h-5 text-indigo-400" /> Dispatch Communication Message / Alert
@@ -422,7 +422,7 @@ export default function DashboardPage() {
                         onChange={(e) => setDispatchChannel(e.target.value)}
                         className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none"
                       >
-                        {commChannels.map((c, idx) => (
+                        {safeArray(commChannels).map((c, idx) => (
                           <option key={idx} value={c.channel_id}>{c.name} ({c.channel_type})</option>
                         ))}
                       </select>
@@ -458,7 +458,6 @@ export default function DashboardPage() {
                 </form>
               </div>
 
-              {/* Message Dispatch Logs */}
               <div>
                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Recent Communication Dispatch Logs</h3>
                 <div className="glass-panel rounded-xl overflow-hidden border border-slate-800">
@@ -473,12 +472,12 @@ export default function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/60">
-                      {commLogs.length === 0 ? (
+                      {safeArray(commLogs).length === 0 ? (
                         <tr>
                           <td colSpan={5} className="p-4 text-center text-slate-500 font-mono">No communication dispatches recorded yet. Use form above to test.</td>
                         </tr>
                       ) : (
-                        commLogs.map((log, i) => (
+                        safeArray(commLogs).map((log, i) => (
                           <tr key={i} className="hover:bg-slate-800/40">
                             <td className="p-3 font-mono text-indigo-400">{log.dispatch_id}</td>
                             <td className="p-3 uppercase text-[11px] font-semibold">{log.channel_type}</td>
@@ -501,7 +500,7 @@ export default function DashboardPage() {
 
           {activeTab === 'plugins' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {plugins.map((p, i) => (
+              {safeArray(plugins).map((p, i) => (
                 <div key={i} className="glass-card p-5 rounded-2xl flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start mb-2">
@@ -519,8 +518,8 @@ export default function DashboardPage() {
                     
                     <div className="space-y-1 text-xs text-slate-400 font-mono mb-4">
                       <p>Category: {p.category}</p>
-                      <p>Tools Attached: {p.tools?.join(', ')}</p>
-                      <p>MCP Servers: {p.mcp_servers?.join(', ')}</p>
+                      <p>Tools Attached: {safeArray(p.tools).join(', ')}</p>
+                      <p>MCP Servers: {safeArray(p.mcp_servers).join(', ')}</p>
                     </div>
                   </div>
 
@@ -539,7 +538,7 @@ export default function DashboardPage() {
 
           {activeTab === 'skills' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {skills.map((s, i) => (
+              {safeArray(skills).map((s, i) => (
                 <div key={i} className="glass-card p-5 rounded-2xl">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-bold text-white text-base">{s.name}</h3>
@@ -562,7 +561,7 @@ export default function DashboardPage() {
               <div>
                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Active LLM Providers</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {modelProviders.map((p, i) => (
+                  {safeArray(modelProviders).map((p, i) => (
                     <div key={i} className="glass-card p-4 rounded-xl flex items-center justify-between">
                       <div>
                         <h4 className="font-semibold text-white text-sm">{p.name}</h4>
@@ -579,7 +578,7 @@ export default function DashboardPage() {
               <div>
                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Registered Models & Capabilities</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {availableModels.map((m, i) => (
+                  {safeArray(availableModels).map((m, i) => (
                     <div key={i} className="glass-card p-5 rounded-2xl">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-bold text-white text-base">{m.name}</h4>
@@ -594,7 +593,7 @@ export default function DashboardPage() {
                       <div className="space-y-1.5 text-xs text-slate-300">
                         <div className="flex justify-between">
                           <span className="text-slate-400">Context Window:</span>
-                          <span className="font-mono">{m.context_window.toLocaleString()} tokens</span>
+                          <span className="font-mono">{m.context_window?.toLocaleString()} tokens</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-400">Coding Score:</span>
@@ -682,7 +681,7 @@ export default function DashboardPage() {
 
           {activeTab === 'agents' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {activeAgents.map((agent) => (
+              {safeArray(activeAgents).map((agent) => (
                 <div key={agent.id} className="glass-card p-5 rounded-2xl flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start mb-3">
@@ -708,7 +707,7 @@ export default function DashboardPage() {
 
           {activeTab === 'templates' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {templates.map((tpl, i) => (
+              {safeArray(templates).map((tpl, i) => (
                 <div key={i} className="glass-card p-5 rounded-2xl flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start mb-2">
@@ -734,7 +733,7 @@ export default function DashboardPage() {
 
           {activeTab === 'tools' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {tools.map((tool, i) => (
+              {safeArray(tools).map((tool, i) => (
                 <div key={i} className="glass-card p-5 rounded-2xl">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-semibold text-base text-white">{tool.name}</h3>
@@ -755,7 +754,7 @@ export default function DashboardPage() {
 
           {activeTab === 'mcp' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {mcpServers.map((server, i) => (
+              {safeArray(mcpServers).map((server, i) => (
                 <div key={i} className="glass-card p-5 rounded-2xl">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-semibold text-base text-white">{server.name}</h3>
@@ -763,7 +762,7 @@ export default function DashboardPage() {
                       {server.transport}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 mb-3">Command / URL: <code className="text-indigo-300">{server.command ? `${server.command} ${server.args?.join(' ')}` : server.url}</code></p>
+                  <p className="text-xs text-slate-400 mb-3">Command / URL: <code className="text-indigo-300">{server.command ? `${server.command} ${safeArray(server.args).join(' ')}` : server.url}</code></p>
                 </div>
               ))}
             </div>
