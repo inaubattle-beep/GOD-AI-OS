@@ -2,13 +2,23 @@ from typing import Dict, Any, List, Optional
 import json
 
 class MCPServerConfig:
-    def __init__(self, name: str, transport: str = "stdio", command: Optional[str] = None, args: Optional[List[str]] = None, url: Optional[str] = None):
+    def __init__(
+        self,
+        name: str,
+        transport: str = "stdio",
+        command: Optional[str] = None,
+        args: Optional[List[str]] = None,
+        url: Optional[str] = None,
+        env_vars: Optional[Dict[str, str]] = None
+    ):
         self.name = name
-        self.transport = transport
+        self.transport = transport # stdio, sse, http
         self.command = command
         self.args = args or []
         self.url = url
+        self.env_vars = env_vars or {}
         self.enabled = True
+        self.status = "CONNECTED"
 
 class MCPGateway:
     def __init__(self):
@@ -28,6 +38,27 @@ class MCPGateway:
             command="npx",
             args=["-y", "@modelcontextprotocol/server-github"]
         ))
+        self.register_server(MCPServerConfig(
+            name="postgresql",
+            transport="stdio",
+            command="npx",
+            args=["-y", "@modelcontextprotocol/server-postgres", "postgresql://god_user:god_password@localhost:5432/god_ai_os"]
+        ))
+        self.register_server(MCPServerConfig(
+            name="slack",
+            transport="sse",
+            url="http://localhost:3001/mcp/slack/sse"
+        ))
+        self.register_server(MCPServerConfig(
+            name="notion",
+            transport="http",
+            url="http://localhost:3002/mcp/notion/api"
+        ))
+        self.register_server(MCPServerConfig(
+            name="erpnext",
+            transport="http",
+            url="http://localhost:8000/mcp/erpnext"
+        ))
 
     def register_server(self, config: MCPServerConfig):
         self._servers[config.name] = config
@@ -40,7 +71,8 @@ class MCPGateway:
                 "command": s.command,
                 "args": s.args,
                 "url": s.url,
-                "enabled": s.enabled
+                "enabled": s.enabled,
+                "status": s.status
             }
             for s in self._servers.values()
         ]
@@ -49,16 +81,35 @@ class MCPGateway:
         if server_name not in self._servers:
             raise ValueError(f"MCP Server '{server_name}' not found.")
         
-        # Baseline mock discovery return for standard MCP tools
         if server_name == "filesystem":
             return [
-                {"name": "mcp_read_file", "description": "Read file via MCP Filesystem server"},
-                {"name": "mcp_list_directory", "description": "List directory contents via MCP"}
+                {"name": "mcp_read_file", "description": "Read file contents via MCP Filesystem"},
+                {"name": "mcp_write_file", "description": "Write file contents via MCP Filesystem"},
+                {"name": "mcp_list_directory", "description": "List directory contents via MCP Filesystem"}
             ]
         elif server_name == "github":
             return [
-                {"name": "mcp_github_create_issue", "description": "Create issue on GitHub via MCP"},
-                {"name": "mcp_github_get_repo", "description": "Get repository details via MCP"}
+                {"name": "mcp_github_create_issue", "description": "Create issue on GitHub repository"},
+                {"name": "mcp_github_get_repo", "description": "Fetch GitHub repository details"},
+                {"name": "mcp_github_create_pr", "description": "Create pull request on GitHub"}
+            ]
+        elif server_name == "postgresql":
+            return [
+                {"name": "mcp_pg_query", "description": "Execute read-only SQL query on PostgreSQL"},
+                {"name": "mcp_pg_inspect_schema", "description": "Inspect PostgreSQL tables and indexes"}
+            ]
+        elif server_name == "slack":
+            return [
+                {"name": "mcp_slack_post_message", "description": "Post message to target Slack channel"}
+            ]
+        elif server_name == "notion":
+            return [
+                {"name": "mcp_notion_search", "description": "Search Notion workspace pages"},
+                {"name": "mcp_notion_create_page", "description": "Create page in Notion database"}
+            ]
+        elif server_name == "erpnext":
+            return [
+                {"name": "mcp_erp_get_doc", "description": "Get ERPNext document by doctype and name"}
             ]
         return []
 

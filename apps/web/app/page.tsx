@@ -3,16 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Bot, Cpu, Terminal, Shield, Wrench, Network, Activity, 
-  Layers, PlusCircle, CheckCircle2, AlertCircle, Play, Settings, RefreshCw, Zap, Sliders
+  Layers, PlusCircle, CheckCircle2, AlertCircle, Play, Settings, RefreshCw, Zap, Sliders, Package, BookOpen
 } from 'lucide-react';
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<'command' | 'agents' | 'templates' | 'tools' | 'mcp' | 'models'>('command');
+  const [activeTab, setActiveTab] = useState<'command' | 'agents' | 'templates' | 'tools' | 'mcp' | 'models' | 'plugins' | 'skills'>('command');
   const [promptInput, setPromptInput] = useState('');
   const [chatLogs, setChatLogs] = useState<Array<{ sender: string; text: string; trace?: any }>>([
     {
       sender: 'MOTHER AGENT',
-      text: 'Greetings. I am GOD AI OS Mother Agent. Ready to orchestrate specialized worker agents, tools, MCP servers, and multi-step workflows. Enter a command or ask me to create an agent.'
+      text: 'Greetings. I am GOD AI OS Mother Agent. Ready to orchestrate specialized worker agents, tools, MCP servers, plugins, skills, and multi-step workflows. Enter a command or ask me to create an agent.'
     }
   ]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -22,6 +22,8 @@ export default function DashboardPage() {
   const [mcpServers, setMcpServers] = useState<any[]>([]);
   const [availableModels, setAvailableModels] = useState<any[]>([]);
   const [modelProviders, setModelProviders] = useState<any[]>([]);
+  const [plugins, setPlugins] = useState<any[]>([]);
+  const [skills, setSkills] = useState<any[]>([]);
   const [systemHealth, setSystemHealth] = useState<any>(null);
 
   // Router test states
@@ -36,13 +38,15 @@ export default function DashboardPage() {
 
   const fetchData = async () => {
     try {
-      const [tRes, aRes, toolRes, mcpRes, modelsRes, provRes, healthRes] = await Promise.all([
+      const [tRes, aRes, toolRes, mcpRes, modelsRes, provRes, plugRes, skillRes, healthRes] = await Promise.all([
         fetch('http://localhost:8000/api/v1/agents/templates').then(r => r.json()).catch(() => []),
         fetch('http://localhost:8000/api/v1/agents').then(r => r.json()).catch(() => []),
         fetch('http://localhost:8000/api/v1/tools').then(r => r.json()).catch(() => []),
         fetch('http://localhost:8000/api/v1/mcp/servers').then(r => r.json()).catch(() => []),
         fetch('http://localhost:8000/api/v1/models').then(r => r.json()).catch(() => []),
         fetch('http://localhost:8000/api/v1/models/providers').then(r => r.json()).catch(() => []),
+        fetch('http://localhost:8000/api/v1/plugins').then(r => r.json()).catch(() => []),
+        fetch('http://localhost:8000/api/v1/skills').then(r => r.json()).catch(() => []),
         fetch('http://localhost:8000/health').then(r => r.json()).catch(() => null)
       ]);
       setTemplates(tRes || []);
@@ -51,6 +55,8 @@ export default function DashboardPage() {
       setMcpServers(mcpRes || []);
       setAvailableModels(modelsRes || []);
       setModelProviders(provRes || []);
+      setPlugins(plugRes || []);
+      setSkills(skillRes || []);
       setSystemHealth(healthRes);
     } catch (e) {
       console.error('Error connecting to backend API', e);
@@ -116,6 +122,21 @@ export default function DashboardPage() {
     }
   };
 
+  const togglePlugin = async (plugin_id: str, current_state: boolean) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/plugins/${plugin_id}/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: !current_state })
+      });
+      if (res.ok) {
+        fetchData();
+      }
+    } catch (err) {
+      alert('Failed to toggle plugin status');
+    }
+  };
+
   const instantiateTemplate = async (name: string) => {
     try {
       const res = await fetch(`http://localhost:8000/api/v1/agents/templates/${encodeURIComponent(name)}/instantiate`, {
@@ -165,6 +186,24 @@ export default function DashboardPage() {
               Model Gateway ({availableModels.length})
             </button>
             <button
+              onClick={() => setActiveTab('plugins')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'plugins' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 glow-primary' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+              }`}
+            >
+              <Package className="w-4 h-4" />
+              Plugins ({plugins.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('skills')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'skills' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 glow-primary' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+              Skills Library ({skills.length})
+            </button>
+            <button
               onClick={() => setActiveTab('agents')}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 activeTab === 'agents' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 glow-primary' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
@@ -212,20 +251,21 @@ export default function DashboardPage() {
             <span className="text-emerald-400 font-semibold">ONLINE</span>
           </div>
           <div className="text-[11px] text-slate-500 space-y-0.5">
-            <p>Providers: OpenAI, Gemini, Ollama</p>
-            <p>Model Gateway: Active</p>
+            <p>Plugins: Active ({plugins.length})</p>
+            <p>MCP Servers: Connected ({mcpServers.length})</p>
           </div>
         </div>
       </aside>
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col overflow-hidden bg-[#090c15]">
-        {/* Top Navbar */}
         <header className="h-16 border-b border-slate-800/80 px-6 flex items-center justify-between glass-panel">
           <div className="flex items-center gap-4">
             <h2 className="text-lg font-semibold text-slate-100 capitalize">
               {activeTab === 'command' && 'AI Command Center & Mother Agent'}
               {activeTab === 'models' && 'Multi-Model Gateway & Intelligent Router'}
+              {activeTab === 'plugins' && 'Plugin Ecosystem & Manager'}
+              {activeTab === 'skills' && 'Reusable Skills Library'}
               {activeTab === 'agents' && 'Active Agent Directory'}
               {activeTab === 'templates' && 'Built-in Agent Templates (25+)'}
               {activeTab === 'tools' && 'Universal Tool Registry'}
@@ -304,9 +344,66 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {activeTab === 'plugins' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {plugins.map((p, i) => (
+                <div key={i} className="glass-card p-5 rounded-2xl flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h3 className="font-bold text-white text-base">{p.name}</h3>
+                        <p className="text-xs text-indigo-400">by {p.author} • v{p.version}</p>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        p.enabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-700 text-slate-400'
+                      }`}>
+                        {p.enabled ? 'ENABLED' : 'DISABLED'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 mb-4">{p.description}</p>
+                    
+                    <div className="space-y-1 text-xs text-slate-400 font-mono mb-4">
+                      <p>Category: {p.category}</p>
+                      <p>Tools Attached: {p.tools?.join(', ')}</p>
+                      <p>MCP Servers: {p.mcp_servers?.join(', ')}</p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => togglePlugin(p.plugin_id, p.enabled)}
+                    className={`w-full py-2 rounded-xl text-xs font-semibold transition-all ${
+                      p.enabled ? 'bg-rose-600/20 text-rose-300 hover:bg-rose-600/30 border border-rose-500/30' : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                    }`}
+                  >
+                    {p.enabled ? 'Disable Plugin' : 'Enable Plugin'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'skills' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {skills.map((s, i) => (
+                <div key={i} className="glass-card p-5 rounded-2xl">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-white text-base">{s.name}</h3>
+                    <span className="px-2 py-0.5 rounded text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase">
+                      {s.category}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 mb-3">{s.description}</p>
+                  <div className="text-[11px] font-mono text-slate-400 bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1">
+                    <p className="text-indigo-400 font-semibold">Skill Instructions Snippet:</p>
+                    <p className="whitespace-pre-wrap">{s.instructions_snippet}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {activeTab === 'models' && (
             <div className="max-w-6xl mx-auto space-y-6">
-              {/* Providers Summary */}
               <div>
                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Active LLM Providers</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -324,7 +421,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Models Directory */}
               <div>
                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Registered Models & Capabilities</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -363,7 +459,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Interactive Router Test */}
               <div className="glass-panel p-6 rounded-2xl border border-slate-800">
                 <h3 className="font-bold text-lg text-white mb-4 flex items-center gap-2">
                   <Sliders className="w-5 h-5 text-indigo-400" /> Test Intelligent Model Router
@@ -513,7 +608,7 @@ export default function DashboardPage() {
                       {server.transport}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 mb-3">Command: <code className="text-indigo-300">{server.command} {server.args?.join(' ')}</code></p>
+                  <p className="text-xs text-slate-400 mb-3">Command / URL: <code className="text-indigo-300">{server.command ? `${server.command} ${server.args?.join(' ')}` : server.url}</code></p>
                 </div>
               ))}
             </div>
