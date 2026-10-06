@@ -20,12 +20,12 @@ async def test_plugin_architecture():
 @pytest.mark.asyncio
 async def test_skill_registry_expanded():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-        # 1. List expanded skills
+        # 1. List expanded AgenticSkills
         skills_resp = await ac.get("/api/v1/skills")
         assert skills_resp.status_code == 200
         skills = skills_resp.json()
-        assert len(skills) >= 7
-        assert any(s["skill_id"] == "financial_auditing" for s in skills)
+        assert len(skills) >= 10
+        assert any(s["skill_id"] == "owasp_security_auditor" for s in skills)
 
         # 2. Register custom skill
         reg_resp = await ac.post("/api/v1/skills", json={

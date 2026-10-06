@@ -45,6 +45,18 @@ class MCPGateway:
             args=["-y", "@modelcontextprotocol/server-postgres", "postgresql://god_user:god_password@localhost:5432/god_ai_os"]
         ))
         self.register_server(MCPServerConfig(
+            name="docker",
+            transport="stdio",
+            command="npx",
+            args=["-y", "@modelcontextprotocol/server-docker"]
+        ))
+        self.register_server(MCPServerConfig(
+            name="puppeteer",
+            transport="stdio",
+            command="npx",
+            args=["-y", "@modelcontextprotocol/server-puppeteer"]
+        ))
+        self.register_server(MCPServerConfig(
             name="slack",
             transport="sse",
             url="http://localhost:3001/mcp/slack/sse"
@@ -53,6 +65,18 @@ class MCPGateway:
             name="notion",
             transport="http",
             url="http://localhost:3002/mcp/notion/api"
+        ))
+        self.register_server(MCPServerConfig(
+            name="fetch",
+            transport="stdio",
+            command="npx",
+            args=["-y", "@modelcontextprotocol/server-fetch"]
+        ))
+        self.register_server(MCPServerConfig(
+            name="memory",
+            transport="stdio",
+            command="npx",
+            args=["-y", "@modelcontextprotocol/server-memory"]
         ))
         self.register_server(MCPServerConfig(
             name="erpnext",
@@ -97,6 +121,26 @@ class MCPGateway:
             return [
                 {"name": "mcp_pg_query", "description": "Execute read-only SQL query on PostgreSQL"},
                 {"name": "mcp_pg_inspect_schema", "description": "Inspect PostgreSQL tables and indexes"}
+            ]
+        elif server_name == "docker":
+            return [
+                {"name": "mcp_docker_list_containers", "description": "List running Docker containers"},
+                {"name": "mcp_docker_inspect_logs", "description": "Fetch container log stream"}
+            ]
+        elif server_name == "puppeteer":
+            return [
+                {"name": "mcp_puppeteer_navigate", "description": "Navigate browser to target URL"},
+                {"name": "mcp_puppeteer_click", "description": "Click element on web page"},
+                {"name": "mcp_puppeteer_screenshot", "description": "Capture page screenshot"}
+            ]
+        elif server_name == "fetch":
+            return [
+                {"name": "mcp_fetch_url", "description": "Fetch raw HTML/Markdown content from URL"}
+            ]
+        elif server_name == "memory":
+            return [
+                {"name": "mcp_memory_create_graph", "description": "Store knowledge graph entity/relation"},
+                {"name": "mcp_memory_read_graph", "description": "Query knowledge graph entities"}
             ]
         elif server_name == "slack":
             return [
