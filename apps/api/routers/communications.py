@@ -10,6 +10,7 @@ class DispatchMessageRequest(BaseModel):
     channel_id: str
     recipient: str
     message_text: str
+    media_url: str | None = None
 
 @router.get("/channels")
 async def list_communication_channels():
@@ -21,7 +22,8 @@ async def dispatch_message(req: DispatchMessageRequest):
         log = comm_hub.dispatch_message(
             channel_id=req.channel_id,
             recipient=req.recipient,
-            message_text=req.message_text
+            message_text=req.message_text,
+            media_url=req.media_url
         )
         return log
     except ValueError as e:
