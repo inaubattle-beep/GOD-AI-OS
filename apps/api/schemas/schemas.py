@@ -26,6 +26,25 @@ class AgentBase(BaseModel):
 class AgentCreate(AgentBase):
     pass
 
+class AgentTemplateCreate(BaseModel):
+    name: str
+    category: str
+    role: str
+    goal: str
+    system_instructions: str
+    skills: List[str] = Field(default_factory=list)
+    tools: List[str] = Field(default_factory=list)
+    permissions: List[str] = Field(default_factory=list)
+
+class AgentTemplateUpdate(BaseModel):
+    category: Optional[str] = None
+    role: Optional[str] = None
+    goal: Optional[str] = None
+    system_instructions: Optional[str] = None
+    skills: Optional[List[str]] = None
+    tools: Optional[List[str]] = None
+    permissions: Optional[List[str]] = None
+
 class AgentUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None

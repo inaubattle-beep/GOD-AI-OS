@@ -29,3 +29,25 @@ async def test_agent_lifecycle_and_templates():
         assert list_resp.status_code == 200
         agents_list = list_resp.json()
         assert any(a["id"] == agent_id for a in agents_list)
+
+        # 5. Create new custom Agent Template
+        create_tpl_resp = await ac.post("/api/v1/agents/templates", json={
+            "name": "Quantum AI Research Agent",
+            "category": "science",
+            "role": "Lead Quantum Computing Researcher",
+            "goal": "Design quantum algorithms and simulate Qiskit circuits.",
+            "system_instructions": "Simulate quantum gates, compute entanglement metrics, and solve optimization problems.",
+            "skills": ["quantum_circuit_design", "qiskit_simulation"],
+            "tools": ["python_eval", "math_solver"],
+            "permissions": ["compute.quantum"]
+        })
+        assert create_tpl_resp.status_code == 200
+        assert create_tpl_resp.json()["name"] == "Quantum AI Research Agent"
+
+        # 6. Update existing template
+        update_tpl_resp = await ac.put("/api/v1/agents/templates/Coding Agent", json={
+            "role": "Principal Autonomous AI Systems Engineer"
+        })
+        assert update_tpl_resp.status_code == 200
+        assert update_tpl_resp.json()["role"] == "Principal Autonomous AI Systems Engineer"
+

@@ -267,6 +267,23 @@ class AgentFactory:
         return None
 
     @staticmethod
+    def update_template(name: str, updated_fields: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        for i, t in enumerate(BUILTIN_AGENT_TEMPLATES):
+            if t["name"].lower() == name.lower():
+                BUILTIN_AGENT_TEMPLATES[i].update(updated_fields)
+                return BUILTIN_AGENT_TEMPLATES[i]
+        return None
+
+    @staticmethod
+    def add_template(template_data: Dict[str, Any]) -> Dict[str, Any]:
+        for i, t in enumerate(BUILTIN_AGENT_TEMPLATES):
+            if t["name"].lower() == template_data["name"].lower():
+                BUILTIN_AGENT_TEMPLATES[i].update(template_data)
+                return BUILTIN_AGENT_TEMPLATES[i]
+        BUILTIN_AGENT_TEMPLATES.append(template_data)
+        return template_data
+
+    @staticmethod
     def create_agent_spec(name: str, custom_instructions: Optional[str] = None) -> AgentCreate:
         template = AgentFactory.get_template(name)
         if template:
