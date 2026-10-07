@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Bot, Cpu, Terminal, Shield, Wrench, Network, Activity, 
-  Layers, PlusCircle, CheckCircle2, AlertCircle, Play, Settings, RefreshCw, Zap, Sliders, Package, BookOpen, MessageSquare, Send
+  Layers, PlusCircle, CheckCircle2, AlertCircle, Play, Settings, RefreshCw, Zap, Sliders, Package, BookOpen, MessageSquare, Send, Trash2
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -183,6 +183,46 @@ export default function DashboardPage() {
     } catch (err) {
       alert(`Failed to instantiate template ${name}`);
     }
+  };
+
+  const deleteSkill = async (skill_id: string) => {
+    if (!confirm(`Are you sure you want to delete skill '${skill_id}'?`)) return;
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/skills/${skill_id}`, { method: 'DELETE' });
+      if (res.ok) fetchData();
+    } catch (e) { alert('Failed to delete skill'); }
+  };
+
+  const deleteMcpServer = async (name: string) => {
+    if (!confirm(`Are you sure you want to delete MCP server '${name}'?`)) return;
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/mcp/servers/${name}`, { method: 'DELETE' });
+      if (res.ok) fetchData();
+    } catch (e) { alert('Failed to delete MCP server'); }
+  };
+
+  const deletePlugin = async (plugin_id: string) => {
+    if (!confirm(`Are you sure you want to delete plugin '${plugin_id}'?`)) return;
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/plugins/${plugin_id}`, { method: 'DELETE' });
+      if (res.ok) fetchData();
+    } catch (e) { alert('Failed to delete plugin'); }
+  };
+
+  const deleteCommChannel = async (channel_id: string) => {
+    if (!confirm(`Are you sure you want to delete channel '${channel_id}'?`)) return;
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/communications/channels/${channel_id}`, { method: 'DELETE' });
+      if (res.ok) fetchData();
+    } catch (e) { alert('Failed to delete channel'); }
+  };
+
+  const deleteModel = async (model_id: string) => {
+    if (!confirm(`Are you sure you want to delete model '${model_id}'?`)) return;
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/models/${model_id}`, { method: 'DELETE' });
+      if (res.ok) fetchData();
+    } catch (e) { alert('Failed to delete model'); }
   };
 
   return (
@@ -539,17 +579,28 @@ export default function DashboardPage() {
           {activeTab === 'skills' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {safeArray(skills).map((s, i) => (
-                <div key={i} className="glass-card p-5 rounded-2xl">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-white text-base">{s.name}</h3>
-                    <span className="px-2 py-0.5 rounded text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase">
-                      {s.category}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-300 mb-3">{s.description}</p>
-                  <div className="text-[11px] font-mono text-slate-400 bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1">
-                    <p className="text-indigo-400 font-semibold">Skill Instructions Snippet:</p>
-                    <p className="whitespace-pre-wrap">{s.instructions_snippet}</p>
+                <div key={i} className="glass-card p-5 rounded-2xl flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-bold text-white text-base">{s.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase">
+                          {s.category}
+                        </span>
+                        <button
+                          onClick={() => deleteSkill(s.skill_id)}
+                          className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
+                          title="Delete Skill"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-300 mb-3">{s.description}</p>
+                    <div className="text-[11px] font-mono text-slate-400 bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1">
+                      <p className="text-indigo-400 font-semibold">Skill Instructions Snippet:</p>
+                      <p className="whitespace-pre-wrap">{s.instructions_snippet}</p>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -758,9 +809,18 @@ export default function DashboardPage() {
                 <div key={i} className="glass-card p-5 rounded-2xl">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-semibold text-base text-white">{server.name}</h3>
-                    <span className="px-2 py-0.5 rounded text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 uppercase">
-                      {server.transport}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 uppercase">
+                        {server.transport}
+                      </span>
+                      <button
+                        onClick={() => deleteMcpServer(server.name)}
+                        className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
+                        title="Delete MCP Server"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                   <p className="text-xs text-slate-400 mb-3">Command / URL: <code className="text-indigo-300">{server.command ? `${server.command} ${safeArray(server.args).join(' ')}` : server.url}</code></p>
                 </div>
