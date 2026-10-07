@@ -28,6 +28,21 @@ class CommunicationsHub:
     def register_channel(self, channel: CommunicationChannel):
         self._channels[channel.channel_id] = channel
 
+    def update_channel(self, channel_id: str, updated_fields: Dict[str, Any]) -> Optional[CommunicationChannel]:
+        if channel_id not in self._channels:
+            return None
+        channel = self._channels[channel_id]
+        for k, v in updated_fields.items():
+            if hasattr(channel, k):
+                setattr(channel, k, v)
+        return channel
+
+    def delete_channel(self, channel_id: str) -> bool:
+        if channel_id in self._channels:
+            del self._channels[channel_id]
+            return True
+        return False
+
     def list_channels(self) -> List[Dict[str, Any]]:
         return [
             {

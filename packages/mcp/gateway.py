@@ -87,6 +87,21 @@ class MCPGateway:
     def register_server(self, config: MCPServerConfig):
         self._servers[config.name] = config
 
+    def update_server(self, name: str, updated_fields: Dict[str, Any]) -> Optional[MCPServerConfig]:
+        if name not in self._servers:
+            return None
+        server = self._servers[name]
+        for k, v in updated_fields.items():
+            if hasattr(server, k):
+                setattr(server, k, v)
+        return server
+
+    def delete_server(self, name: str) -> bool:
+        if name in self._servers:
+            del self._servers[name]
+            return True
+        return False
+
     def list_servers(self) -> List[Dict[str, Any]]:
         return [
             {

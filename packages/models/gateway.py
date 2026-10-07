@@ -93,6 +93,21 @@ class ModelGateway:
     def register_model(self, model_spec: ModelSpec):
         self._models[model_spec.model_id] = model_spec
 
+    def update_model(self, model_id: str, updated_fields: Dict[str, Any]) -> Optional[ModelSpec]:
+        if model_id not in self._models:
+            return None
+        model = self._models[model_id]
+        for k, v in updated_fields.items():
+            if hasattr(model, k):
+                setattr(model, k, v)
+        return model
+
+    def delete_model(self, model_id: str) -> bool:
+        if model_id in self._models:
+            del self._models[model_id]
+            return True
+        return False
+
     def list_models(self) -> List[Dict[str, Any]]:
         return [
             {

@@ -15,6 +15,14 @@ class SkillCreateRequest(BaseModel):
     required_tools: List[str] = []
     author: str = "User"
 
+class SkillUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    instructions: Optional[str] = None
+    category: Optional[str] = None
+    required_tools: Optional[List[str]] = None
+    enabled: Optional[bool] = None
+
 @router.get("")
 async def list_skills():
     return skill_registry.list_skills()
@@ -49,3 +57,25 @@ async def get_skill(skill_id: str):
         "version": skill.version,
         "enabled": skill.enabled
     }
+
+@router.put("/{skill_id}")
+async def update_skill(skill_id: str, req: SkillUpdateRequest):
+    skill = skill_registry.update_skill(skill_id, req.model_dump(exclude_unset=True))
+    if not skill:
+        raise HTTPException(status_code=404, detail="Skill not found")
+    return {
+        "skill_id": skill.skill_id,
+        "name": skill.name,
+        "description": skill.description,
+        "instructions": skill.instructions,
+        "category": skill.category,
+        "required_tools": skill.required_tools,
+        "enabled": skill.enabled
+    }
+
+@router.delete("/{skill_id}")
+async def delete_skill(skill_id: str):
+    success = skill_registry.delete_skill(skill_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Skill not found")
+    return {"status": "DELETED", "skill_id": skill_id}

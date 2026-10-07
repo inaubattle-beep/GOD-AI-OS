@@ -108,4 +108,19 @@ class PluginManager:
             return True
         return False
 
+    def update_plugin(self, plugin_id: str, updated_fields: Dict[str, Any]) -> Optional[PluginManifest]:
+        if plugin_id not in self._plugins:
+            return None
+        plugin = self._plugins[plugin_id]
+        for k, v in updated_fields.items():
+            if hasattr(plugin, k):
+                setattr(plugin, k, v)
+        return plugin
+
+    def delete_plugin(self, plugin_id: str) -> bool:
+        if plugin_id in self._plugins:
+            del self._plugins[plugin_id]
+            return True
+        return False
+
 plugin_manager = PluginManager()

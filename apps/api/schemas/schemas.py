@@ -141,6 +141,13 @@ class MCPServerCreate(BaseModel):
     url: Optional[str] = None
     env_vars: Dict[str, str] = Field(default_factory=dict)
 
+class MCPServerUpdate(BaseModel):
+    transport: Optional[str] = None
+    command: Optional[str] = None
+    args: Optional[List[str]] = None
+    url: Optional[str] = None
+    enabled: Optional[bool] = None
+
 class MCPServerResponse(MCPServerCreate):
     id: str
     enabled: bool
@@ -171,3 +178,28 @@ class MotherAgentChatRequest(BaseModel):
     user_prompt: str
     agent_id: Optional[str] = None
     context_memory: bool = True
+
+# Plugin Schemas
+class PluginCreate(BaseModel):
+    plugin_id: str
+    name: str
+    version: str = "1.0.0"
+    description: str
+    author: str = "User"
+    category: str = "custom"
+    permissions: List[str] = Field(default_factory=list)
+    tools: List[str] = Field(default_factory=list)
+    skills: List[str] = Field(default_factory=list)
+    mcp_servers: List[str] = Field(default_factory=list)
+
+class PluginUpdate(BaseModel):
+    name: Optional[str] = None
+    version: Optional[str] = None
+    description: Optional[str] = None
+    author: Optional[str] = None
+    category: Optional[str] = None
+    permissions: Optional[List[str]] = None
+    tools: Optional[List[str]] = None
+    skills: Optional[List[str]] = None
+    mcp_servers: Optional[List[str]] = None
+    enabled: Optional[bool] = None

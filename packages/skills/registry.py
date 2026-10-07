@@ -51,6 +51,22 @@ class SkillRegistry:
     def get_skill(self, skill_id: str) -> Optional[SkillDefinition]:
         return self._skills.get(skill_id.lower())
 
+    def update_skill(self, skill_id: str, updated_fields: Dict[str, Any]) -> Optional[SkillDefinition]:
+        skill = self.get_skill(skill_id)
+        if not skill:
+            return None
+        for key, val in updated_fields.items():
+            if hasattr(skill, key):
+                setattr(skill, key, val)
+        return skill
+
+    def delete_skill(self, skill_id: str) -> bool:
+        sid = skill_id.lower()
+        if sid in self._skills:
+            del self._skills[sid]
+            return True
+        return False
+
     def _register_agentic_skills(self):
         # 1. GitHub Code Reviewer
         self.register_skill(SkillDefinition(
